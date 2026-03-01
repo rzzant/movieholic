@@ -1,80 +1,39 @@
+// ===============================
+// FILE: server.js
+// ===============================
+
 const express = require("express");
 const mongoose = require("mongoose");
+require("dotenv").config();
+
+// Import routes
+const movieRoutes = require("./routes/movieRoutes");
+const authRoutes = require("./routes/authRoutes");
 
 const app = express();
+
+// Middleware
 app.use(express.json());
 
-/* ✅ MongoDB connection */
-mongoose.connect(
-  "mongodb+srv://movieuser:movie123@cluster0.clhigw7.mongodb.net/movieholic?retryWrites=true&w=majority"
-)
-.then(() => console.log("✅ MongoDB connected"))
-.catch(err => console.log("❌ DB Error:", err));
+// MongoDB Connection
+mongoose.connect(process.env.MONGO_URI)
+  .then(() => console.log("✅ MongoDB connected"))
+  .catch(err => console.log("❌ DB Error:", err));
 
-
-/* ✅ Schema */
-const movieSchema = new mongoose.Schema({
-  title: String,
-  genre: String,
-  rating: Number
-});
-
-const Movie = mongoose.model("Movie", movieSchema);
-
-
-/* ✅ Home */
+// Home Route
 app.get("/", (req, res) => {
-  res.send("Movieholic API running 🎬");
+  res.send("🎬 Movieholic API running");
 });
 
+// Auth Routes
+app.use("/api/auth", authRoutes);
 
-/* ✅ GET all movies */
-app.get("/movies", async (req, res) => {
-  try {
-    const movies = await Movie.find();
-    res.json(movies);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
+// Movie Routes
+app.use("/movies", movieRoutes);
 
+// Start Server
+const PORT = process.env.PORT || 3000;
 
-/* ✅ Add movie */
-app.post("/movies", async (req, res) => {
-  try {
-    const movie = new Movie(req.body);
-    await movie.save();
-    res.json(movie);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-
-/* ✅ Rate movie */
-app.post("/rate", async (req, res) => {
-  try {
-    const { id, rating } = req.body;
-
-    const movie = await Movie.findByIdAndUpdate(
-      id,
-      { rating },
-      { new: true }
-    );
-
-    if (!movie) {
-      return res.json({ message: "Movie not found" });
-    }
-
-    res.json(movie);
-
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-
-/* ✅ Start server */
-app.listen(3000, () => {
-  console.log("🚀 Server running on port 3000");
+app.listen(PORT, () => {
+  console.log(`🚀 Server running on port ${PORT}`);
 });

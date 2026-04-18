@@ -1,10 +1,11 @@
 const express = require("express");
-const protect = require("../middleware/authMiddleware");
+const { authMiddleware } = require("../middleware/authMiddleware"); // ✅ FIXED
 const WatchlistItem = require("../models/WatchlistItem");
 
 const router = express.Router();
 
-router.use(protect);
+// Apply auth middleware to all routes
+router.use(authMiddleware);
 
 router.get("/", async (req, res) => {
   try {
@@ -38,6 +39,7 @@ router.post("/", async (req, res) => {
       user: req.user.id,
       tmdbId: Number(tmdbId)
     });
+
     if (existing) {
       return res.status(200).json(existing);
     }
@@ -71,6 +73,7 @@ router.post("/", async (req, res) => {
 router.delete("/:tmdbId", async (req, res) => {
   try {
     const tmdbId = Number(req.params.tmdbId);
+
     if (Number.isNaN(tmdbId)) {
       return res.status(400).json({ message: "Invalid tmdbId" });
     }

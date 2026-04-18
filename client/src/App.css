@@ -1,38 +1,85 @@
-.App {
+body {
+  background: #0f0f0f;
+  color: white;
+  font-family: 'Poppins', sans-serif;
+  margin: 0;
+  padding: 0;
+}
+
+/* Header */
+h1 {
+  text-align: center;
+  margin-top: 20px;
+}
+
+/* Container */
+.container {
+  padding: 20px;
+}
+
+/* Search bar */
+input {
+  padding: 10px;
+  border-radius: 8px;
+  border: none;
+  margin-right: 10px;
+  width: 250px;
+}
+
+button {
+  background: #ff3c3c;
+  color: white;
+  padding: 10px 15px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+button:hover {
+  background: #ff1f1f;
+}
+
+/* Movie grid */
+.movie-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  margin-top: 20px;
+}
+
+/* Movie card */
+.movie-card {
+  background: #1c1c1c;
+  padding: 12px;
+  border-radius: 12px;
+  width: 180px;
+  transition: 0.3s;
   text-align: center;
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
+.movie-card:hover {
+  transform: scale(1.07);
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
+.movie-card img {
+  width: 100%;
+  border-radius: 10px;
 }
 
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
+.movie-card h3 {
+  font-size: 14px;
+  margin: 10px 0;
+}
+
+/* Auth section */
+.auth-box {
   display: flex;
-  flex-direction: column;
-  align-items: center;
   justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
+  gap: 10px;
+  margin: 20px 0;
 }
 
-.App-link {
-  color: #61dafb;
-}
-
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.auth-box input {
+  width: 200px;
 }

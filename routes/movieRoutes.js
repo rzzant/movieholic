@@ -1,12 +1,15 @@
 const express = require("express");
 const router = express.Router();
-const protect = require("../middleware/authMiddleware");
+
+// ✅ FIXED import
+const { authMiddleware } = require("../middleware/authMiddleware");
+
 const Movie = require("../models/Movie");
 
 /* ===========================
    CREATE MOVIE
 =========================== */
-router.post("/", protect, async (req, res) => {
+router.post("/", authMiddleware, async (req, res) => {
   try {
     const { title, genre, rating } = req.body;
 
@@ -25,9 +28,9 @@ router.post("/", protect, async (req, res) => {
 });
 
 /* ===========================
-   GET ALL MOVIES (Only User's)
+   GET ALL MOVIES
 =========================== */
-router.get("/", protect, async (req, res) => {
+router.get("/", authMiddleware, async (req, res) => {
   try {
     const movies = await Movie.find({ user: req.user.id });
     res.json(movies);
@@ -39,7 +42,7 @@ router.get("/", protect, async (req, res) => {
 /* ===========================
    GET SINGLE MOVIE
 =========================== */
-router.get("/:id", protect, async (req, res) => {
+router.get("/:id", authMiddleware, async (req, res) => {
   try {
     const movie = await Movie.findById(req.params.id);
 
@@ -57,7 +60,7 @@ router.get("/:id", protect, async (req, res) => {
 /* ===========================
    UPDATE MOVIE
 =========================== */
-router.put("/:id", protect, async (req, res) => {
+router.put("/:id", authMiddleware, async (req, res) => {
   try {
     const movie = await Movie.findByIdAndUpdate(
       req.params.id,
@@ -79,7 +82,7 @@ router.put("/:id", protect, async (req, res) => {
 /* ===========================
    DELETE MOVIE
 =========================== */
-router.delete("/:id", protect, async (req, res) => {
+router.delete("/:id", authMiddleware, async (req, res) => {
   try {
     const movie = await Movie.findByIdAndDelete(req.params.id);
 
@@ -97,7 +100,7 @@ router.delete("/:id", protect, async (req, res) => {
 /* ===========================
    ADD REVIEW
 =========================== */
-router.post("/:id/reviews", protect, async (req, res) => {
+router.post("/:id/reviews", authMiddleware, async (req, res) => {
   try {
     const { rating, comment } = req.body;
 
@@ -117,7 +120,7 @@ router.post("/:id/reviews", protect, async (req, res) => {
 
     const review = {
       user: req.user.id,
-      name: req.user.name, // better than id
+      name: req.user.name,
       rating: Number(rating),
       comment
     };
@@ -139,7 +142,4 @@ router.post("/:id/reviews", protect, async (req, res) => {
   }
 });
 
-/* ===========================
-   EXPORT ROUTER
-=========================== */
 module.exports = router;

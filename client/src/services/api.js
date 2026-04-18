@@ -1,104 +1,100 @@
-const API_KEY = "18279ce723982eecf6c783c1d2b033dd";
+const API = "http://localhost:5001/api";
 
-const authHeaders = () => {
-  const token = localStorage.getItem("token");
-  const headers = { "Content-Type": "application/json" };
-  if (token) headers.Authorization = `Bearer ${token}`;
-  return headers;
-};
-
+// ───────── AUTH ─────────
 export const getStoredUser = () => {
-  try {
-    const raw = localStorage.getItem("user");
-    return raw ? JSON.parse(raw) : null;
-  } catch {
-    return null;
-  }
+  const user = localStorage.getItem("user");
+  return user ? JSON.parse(user) : null;
 };
 
 export const setSession = (token, user) => {
-  if (token) localStorage.setItem("token", token);
-  else localStorage.removeItem("token");
-  if (user) localStorage.setItem("user", JSON.stringify(user));
-  else localStorage.removeItem("user");
+  localStorage.setItem("token", token);
+  localStorage.setItem("user", JSON.stringify(user));
 };
 
-export const clearSession = () => setSession(null, null);
+export const clearSession = () => {
+  localStorage.removeItem("token");
+  localStorage.removeItem("user");
+};
 
-export const fetchMovies = async (query) => {
-  const url = query
-    ? `https://api.themoviedb.org/3/search/movie?api_key=${API_KEY}&query=${encodeURIComponent(
-        query
-      )}`
-    : `https://api.themoviedb.org/3/movie/popular?api_key=${API_KEY}`;
+// Helper for headers
+const authHeader = () => ({
+  "Content-Type": "application/json",
+  Authorization: "Bearer " + localStorage.getItem("token"),
+});
 
-  const res = await fetch(url);
-  const data = await res.json();
-  return data.results || [];
+// ───────── AUTH API ─────────
+export const login = async (email, password) => {
+  const res = await fetch(`${API}/auth/login`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, password }),
+  });
+
+  if (!res.ok) throw new Error("Login failed");
+  return res.json();
 };
 
 export const register = async (name, email, password) => {
-  const res = await fetch("/api/auth/register", {
+  const res = await fetch(`${API}/auth/register`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ name, email, password })
+    body: JSON.stringify({ name, email, password }),
   });
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data.message || data.error || "Register failed");
-  return data;
+
+  if (!res.ok) throw new Error("Register failed");
+  return res.json();
 };
 
-export const login = async (email, password) => {
-  const res = await fetch("/api/auth/login", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email, password })
-  });
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data.message || data.error || "Login failed");
-  return data;
-};
-
-const handleAuthResponse = async (res) => {
-  const data = await res.json().catch(() => ({}));
-  if (res.status === 401) {
-    clearSession();
-    throw new Error("Session expired. Please sign in again.");
-  }
-  if (!res.ok) {
-    throw new Error(data.message || data.error || "Request failed");
-  }
-  return data;
-};
-
+// ───────── WATCHLIST ─────────
 export const fetchWatchlist = async () => {
-  const res = await fetch("/api/watchlist", { headers: authHeaders() });
-  const data = await handleAuthResponse(res);
-  return Array.isArray(data) ? data : [];
-};
+  const res = await fetch(`${API}/watchlist`, {
+    headers: authHeader(),
+  });
 
-export const tmdbMovieToPayload = (movie) => ({
-  tmdbId: movie.id,
-  title: movie.title,
-  posterPath: movie.poster_path || "",
-  overview: movie.overview || "",
-  voteAverage: movie.vote_average ?? 0,
-  releaseDate: movie.release_date || ""
-});
+  if (!res.ok) throw new Error("Failed to fetch watchlist");
+  return res.json();
+};
 
 export const addToWatchlist = async (movie) => {
-  const res = await fetch("/api/watchlist", {
+  const res = await fetch(`${API}/watchlist`, {   // ✅ FIXED
     method: "POST",
-    headers: authHeaders(),
-    body: JSON.stringify(tmdbMovieToPayload(movie))
+    headers: authHeader(),
+    body: JSON.stringify({
+      tmdbId: movie.id,
+      title: movie.title,
+      posterPath: movie.poster_path,
+      overview: movie.overview,
+      voteAverage: movie.vote_average,
+      releaseDate: movie.release_date,
+    }),
   });
-  return handleAuthResponse(res);
+
+  if (!res.ok) throw new Error("Failed to add");
+  return res.json();
 };
 
 export const removeFromWatchlist = async (tmdbId) => {
-  const res = await fetch(`/api/watchlist/${tmdbId}`, {
+  const res = await fetch(`${API}/watchlist/${tmdbId}`, {
     method: "DELETE",
-    headers: authHeaders()
+    headers: authHeader(),
   });
-  return handleAuthResponse(res);
+
+  if (!res.ok) throw new Error("Failed to remove");
+  return res.json();
+};
+
+// ───────── MOVIES (TMDB) ─────────
+const TMDB_API_KEY = "55a815c9929d79db04d1b67e0777af17"; // 🔥 PUT REAL KEY HERE
+
+export const fetchMovies = async (query = "") => {
+  const url = query
+    ? `https://api.themoviedb.org/3/search/movie?api_key=${TMDB_API_KEY}&query=${query}`
+    : `https://api.themoviedb.org/3/movie/popular?api_key=${TMDB_API_KEY}`;
+
+  const res = await fetch(url);
+
+  if (!res.ok) throw new Error("Failed to fetch movies");
+
+  const data = await res.json();
+  return data.results || [];
 };
